@@ -1,8 +1,28 @@
 import json
+import logging
 import os
 import traceback
+from urllib.parse import urlparse
 
 import yt_dlp
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("downloader")
+
+
+ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _safe_call(callback, method_name, *args, **kwargs):
+    """Invoke a callback method, logging any exception instead of swallowing it."""
+    if callback is None:
+        return
+    try:
+        getattr(callback, method_name)(*args, **kwargs)
+    except Exception:
+        logger.exception("Callback %s failed", method_name)
+        traceback.print_exc()
 
 
 def _progress_hook(callback):
@@ -16,24 +36,25 @@ def _progress_hook(callback):
                 percent = min(100.0, downloaded / total * 100.0)
             speed = info.get("speed", 0) or 0
             eta = info.get("eta", 0) or 0
-            try:
-                callback.onProgress(
-                    percent,
-                    int(downloaded),
-                    int(total),
-                    int(speed),
-                    int(eta),
-                    info.get("filename", ""),
-                )
-            except Exception:
-                traceback.print_exc()
+            _safe_call(
+                callback,
+                "onProgress",
+                percent,
+                int(downloaded),
+                int(total),
+                int(speed),
+                int(eta),
+                info.get("filename", ""),
+            )
         elif status == "finished":
-            try:
-                callback.onConverting(info.get("filename", ""))
-            except Exception:
-                traceback.print_exc()
+            _safe_call(callback, "onConverting", info.get("filename", ""))
 
     return hook
+
+
+def _is_valid_url(url):
+    parsed = urlparse(url)
+    return parsed.scheme in ALLOWED_SCHEMES and parsed.netloc
 
 
 def download(url, out_dir, options=None, callback=None):
@@ -54,6 +75,9 @@ def download(url, out_dir, options=None, callback=None):
             {"status": "error", "file": None, "message": "No URL provided"}
         )
 
+    if not _is_valid_url(url):
+        return json.dumps({"status": "error", "file": None, "message": "Invalid URL"})
+
     os.makedirs(out_dir, exist_ok=True)
 
     opts = {
@@ -66,11 +90,7 @@ def download(url, out_dir, options=None, callback=None):
     if options:
         opts.update(options)
 
-    if callback is not None:
-        try:
-            callback.onStart(url)
-        except Exception:
-            traceback.print_exc()
+    _safe_call(callback, "onStart", url)
 
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
@@ -95,30 +115,18 @@ def download(url, out_dir, options=None, callback=None):
                         filename = candidate
                         break
 
-            if callback is not None:
-                try:
-                    callback.onComplete(filename)
-                except Exception:
-                    traceback.print_exc()
+            _safe_call(callback, "onComplete", filename)
 
             return json.dumps(
                 {"status": "ok", "file": filename, "message": "Download complete"}
             )
 
     except yt_dlp.utils.DownloadError as e:
-        if callback is not None:
-            try:
-                callback.onError(str(e))
-            except Exception:
-                traceback.print_exc()
+        _safe_call(callback, "onError", str(e))
         return json.dumps({"status": "error", "file": None, "message": str(e)})
     except Exception as e:
-        traceback.print_exc()
-        if callback is not None:
-            try:
-                callback.onError(str(e))
-            except Exception:
-                traceback.print_exc()
+        logger.exception("Unexpected error during download")
+        _safe_call(callback, "onError", str(e))
         return json.dumps({"status": "error", "file": None, "message": str(e)})
 
 

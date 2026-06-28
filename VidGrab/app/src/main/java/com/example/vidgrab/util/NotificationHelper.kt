@@ -10,6 +10,7 @@ import com.example.vidgrab.R
 object NotificationHelper {
     const val CHANNEL_ID = "vidgrab_downloads"
     const val NOTIFICATION_ID = 1
+    const val INDETERMINATE_PROGRESS = -1
 
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

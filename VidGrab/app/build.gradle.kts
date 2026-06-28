@@ -61,7 +61,7 @@ chaquopy {
     defaultConfig {
         version = "3.14"
         pip {
-            install("yt-dlp")
+            install("yt-dlp==2026.06.09")
         }
     }
     productFlavors { }

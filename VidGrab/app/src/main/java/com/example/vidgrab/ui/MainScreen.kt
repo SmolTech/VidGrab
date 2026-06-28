@@ -54,8 +54,13 @@ import com.example.vidgrab.vm.DownloadViewModel
 fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val ytDlpVersion by viewModel.ytDlpVersion.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadYtDlpVersion(context)
+    }
 
     val notificationPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -69,6 +74,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
         val result = uiState.result
         if (result is DownloadResult.Error) {
             snackbarHostState.showSnackbar(result.message)
+            viewModel.onErrorShown()
         }
     }
 
@@ -147,7 +153,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = stringResource(R.string.powered_by, getYtDlpVersion(context)),
+                text = stringResource(R.string.powered_by, ytDlpVersion ?: stringResource(R.string.version_unknown)),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -213,16 +219,6 @@ private fun DownloadStatus(result: DownloadResult) {
         }
     }
 }
-
-private fun getYtDlpVersion(context: Context): String =
-    try {
-        val py =
-            com.chaquo.python.Python
-                .getInstance()
-        py.getModule("downloader").callAttr("get_version").toString()
-    } catch (e: Exception) {
-        context.getString(R.string.version_unknown)
-    }
 
 private fun formatBytes(bytes: Long): String {
     if (bytes <= 0) return "0 B"

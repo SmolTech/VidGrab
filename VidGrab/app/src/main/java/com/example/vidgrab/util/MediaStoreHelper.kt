@@ -18,8 +18,9 @@ object MediaStoreHelper {
         sourceFile: File,
     ): Uri? {
         val resolver = context.contentResolver
-        val displayName = sourceFile.nameWithoutExtension + ".mp4"
-        val mimeType = "video/mp4"
+        val extension = sourceFile.extension.lowercase().ifBlank { "mp4" }
+        val displayName = "${sourceFile.nameWithoutExtension}.$extension"
+        val mimeType = mimeTypeForExtension(extension)
 
         val collection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -55,4 +56,16 @@ object MediaStoreHelper {
             null
         }
     }
+
+    private fun mimeTypeForExtension(extension: String): String =
+        when (extension) {
+            "mp4" -> "video/mp4"
+            "webm" -> "video/webm"
+            "mkv" -> "video/x-matroska"
+            "mov" -> "video/quicktime"
+            "avi" -> "video/x-msvideo"
+            "flv" -> "video/x-flv"
+            "3gp", "3gpp" -> "video/3gpp"
+            else -> "video/*"
+        }
 }

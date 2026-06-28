@@ -3,7 +3,9 @@ package com.example.vidgrab.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.os.IBinder
+import android.os.ResultReceiver
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
@@ -11,25 +13,43 @@ import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.example.vidgrab.R
 import com.example.vidgrab.util.DownloadResult
-import com.example.vidgrab.util.DownloadStateManager
 import com.example.vidgrab.util.MediaStoreHelper
 import com.example.vidgrab.util.NotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 
 class DownloadForegroundService : LifecycleService() {
     companion object {
-        private const val EXTRA_URL = "extra_url"
+        const val EXTRA_URL = "extra_url"
+        const val EXTRA_RESULT_RECEIVER = "extra_result_receiver"
+
+        const val RESULT_START = 1
+        const val RESULT_PROGRESS = 2
+        const val RESULT_CONVERTING = 3
+        const val RESULT_COMPLETE = 4
+        const val RESULT_ERROR = 5
+
+        const val EXTRA_PERCENT = "percent"
+        const val EXTRA_DOWNLOADED = "downloaded"
+        const val EXTRA_TOTAL = "total"
+        const val EXTRA_SPEED = "speed"
+        const val EXTRA_ETA = "eta"
+        const val EXTRA_FILENAME = "filename"
+        const val EXTRA_FILE = "file"
+        const val EXTRA_MESSAGE = "message"
 
         fun start(
             context: Context,
             url: String,
+            resultReceiver: ResultReceiver,
         ) {
             val intent =
                 Intent(context, DownloadForegroundService::class.java).apply {
                     putExtra(EXTRA_URL, url)
+                    putExtra(EXTRA_RESULT_RECEIVER, resultReceiver)
                 }
             context.startForegroundService(intent)
         }
@@ -46,6 +66,8 @@ class DownloadForegroundService : LifecycleService() {
         startId: Int,
     ): Int {
         val url = intent?.getStringExtra(EXTRA_URL)
+        val resultReceiver = intent?.getParcelableExtra<ResultReceiver>(EXTRA_RESULT_RECEIVER)
+
         if (url.isNullOrBlank()) {
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf(startId)
@@ -62,12 +84,17 @@ class DownloadForegroundService : LifecycleService() {
                 ).build()
 
         startForeground(NotificationHelper.NOTIFICATION_ID, initialNotification)
-        DownloadStateManager.start(url)
+        resultReceiver?.send(RESULT_START, Bundle().apply { putString(EXTRA_URL, url) })
 
         lifecycleScope.launch(Dispatchers.IO) {
-            runDownload(url)
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf(startId)
+            try {
+                runDownload(url, resultReceiver)
+            } finally {
+                withContext(Dispatchers.Main) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf(startId)
+                }
+            }
         }
 
         return Service.START_NOT_STICKY
@@ -78,7 +105,10 @@ class DownloadForegroundService : LifecycleService() {
         return null
     }
 
-    private suspend fun runDownload(url: String) {
+    private suspend fun runDownload(
+        url: String,
+        resultReceiver: ResultReceiver?,
+    ) {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
@@ -111,15 +141,16 @@ class DownloadForegroundService : LifecycleService() {
                         content = File(filename).name,
                         progress = progress,
                     )
-                    DownloadStateManager.setProgress(
-                        DownloadResult.Progress(
-                            percent = percent.toFloat(),
-                            downloaded = downloaded,
-                            total = total,
-                            speed = speed,
-                            eta = eta,
-                            filename = filename,
-                        ),
+                    resultReceiver?.send(
+                        RESULT_PROGRESS,
+                        Bundle().apply {
+                            putFloat(EXTRA_PERCENT, percent.toFloat())
+                            putLong(EXTRA_DOWNLOADED, downloaded)
+                            putLong(EXTRA_TOTAL, total)
+                            putLong(EXTRA_SPEED, speed)
+                            putInt(EXTRA_ETA, eta)
+                            putString(EXTRA_FILENAME, filename)
+                        },
                     )
                 }
 
@@ -127,23 +158,29 @@ class DownloadForegroundService : LifecycleService() {
                     updateNotification(
                         title = getString(R.string.notification_download_converting),
                         content = File(filename).name,
-                        progress = -1,
+                        progress = NotificationHelper.INDETERMINATE_PROGRESS,
                     )
-                    DownloadStateManager.setConverting(filename)
+                    resultReceiver?.send(
+                        RESULT_CONVERTING,
+                        Bundle().apply { putString(EXTRA_FILENAME, filename) },
+                    )
                 }
 
                 override fun onComplete(file: String) {
-                    // Handled after Python returns so we can copy to MediaStore.
+                    // Completion is handled after Python returns so we can copy to MediaStore.
                 }
 
                 override fun onError(message: String) {
-                    DownloadStateManager.setError(message)
+                    resultReceiver?.send(
+                        RESULT_ERROR,
+                        Bundle().apply { putString(EXTRA_MESSAGE, message) },
+                    )
                 }
             }
 
         try {
             val resultJson = module.callAttr("download", url, outDir, null, callback).toString()
-            val result = org.json.JSONObject(resultJson)
+            val result = JSONObject(resultJson)
             val status = result.getString("status")
             val filePath = result.optString("file", "").takeIf { it.isNotEmpty() }
             val message = result.getString("message")
@@ -154,7 +191,10 @@ class DownloadForegroundService : LifecycleService() {
 
                 withContext(Dispatchers.Main) {
                     if (uri != null) {
-                        DownloadStateManager.setComplete(uri.toString())
+                        resultReceiver?.send(
+                            RESULT_COMPLETE,
+                            Bundle().apply { putString(EXTRA_FILE, uri.toString()) },
+                        )
                         updateNotification(
                             title = getString(R.string.notification_download_complete),
                             content = getString(R.string.notification_download_saved),
@@ -162,21 +202,28 @@ class DownloadForegroundService : LifecycleService() {
                             ongoing = false,
                         )
                     } else {
-                        // MediaStore failed; keep the file in cache and report its path.
-                        DownloadStateManager.setComplete(sourceFile.absolutePath)
-                        DownloadStateManager.setError(getString(R.string.error_media_store))
+                        resultReceiver?.send(
+                            RESULT_COMPLETE,
+                            Bundle().apply { putString(EXTRA_FILE, sourceFile.absolutePath) },
+                        )
+                        resultReceiver?.send(
+                            RESULT_ERROR,
+                            Bundle().apply { putString(EXTRA_MESSAGE, getString(R.string.error_media_store)) },
+                        )
                     }
                 }
                 sourceFile.delete()
             } else {
-                withContext(Dispatchers.Main) {
-                    DownloadStateManager.setError(message ?: getString(R.string.error_unknown))
-                }
+                resultReceiver?.send(
+                    RESULT_ERROR,
+                    Bundle().apply { putString(EXTRA_MESSAGE, message) },
+                )
             }
         } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                DownloadStateManager.setError(e.message ?: getString(R.string.error_unknown))
-            }
+            resultReceiver?.send(
+                RESULT_ERROR,
+                Bundle().apply { putString(EXTRA_MESSAGE, e.message ?: getString(R.string.error_unknown)) },
+            )
         }
     }
 
