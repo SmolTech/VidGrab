@@ -169,6 +169,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
 
 @Composable
 private fun DownloadStatus(result: DownloadResult) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
