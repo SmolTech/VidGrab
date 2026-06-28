@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">VidGrab</string>
+    <string name="instructions">Paste a video link below and tap Download. The video will be saved to Movies/VidGrab.</string>
+    <string name="hint_url">Video URL</string>
+    <string name="paste">Paste</string>
+    <string name="download">Download</string>
+
+    <string name="status_starting">Starting download…</string>
+    <string name="status_progress">Downloading… %1$d%% (%2$s / %3$s)</string>
+    <string name="status_converting">Post-processing…</string>
+    <string name="status_complete">Download complete</string>
+
+    <string name="channel_name">Downloads</string>
+    <string name="channel_description">Video download progress and status</string>
+    <string name="notification_download_starting">Starting download</string>
+    <string name="notification_download_progress">Downloading %1$d%%</string>
+    <string name="notification_download_converting">Post-processing video</string>
+    <string name="notification_download_complete">Download complete</string>
+    <string name="notification_download_saved">Saved to Movies/VidGrab</string>
+
+    <string name="error_media_store">Could not save to gallery, but the file is available in the app cache.</string>
+    <string name="error_unknown">An unknown error occurred</string>
+    <string name="version_unknown">unknown</string>
+    <string name="powered_by">Powered by yt-dlp %1$s</string>
+</resources>
