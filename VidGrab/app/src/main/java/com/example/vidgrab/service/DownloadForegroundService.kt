@@ -40,16 +40,19 @@ class DownloadForegroundService : LifecycleService() {
         const val EXTRA_FILENAME = "filename"
         const val EXTRA_FILE = "file"
         const val EXTRA_MESSAGE = "message"
+        const val EXTRA_OPTIONS = "extra_options"
 
         fun start(
             context: Context,
             url: String,
             resultReceiver: ResultReceiver,
+            options: Bundle? = null,
         ) {
             val intent =
                 Intent(context, DownloadForegroundService::class.java).apply {
                     putExtra(EXTRA_URL, url)
                     putExtra(EXTRA_RESULT_RECEIVER, resultReceiver)
+                    putExtra(EXTRA_OPTIONS, options)
                 }
             context.startForegroundService(intent)
         }
@@ -67,6 +70,7 @@ class DownloadForegroundService : LifecycleService() {
     ): Int {
         val url = intent?.getStringExtra(EXTRA_URL)
         val resultReceiver = intent?.getParcelableExtra<ResultReceiver>(EXTRA_RESULT_RECEIVER)
+        val options = intent?.getBundleExtra(EXTRA_OPTIONS)
 
         if (url.isNullOrBlank()) {
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -88,7 +92,7 @@ class DownloadForegroundService : LifecycleService() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                runDownload(url, resultReceiver)
+                runDownload(url, resultReceiver, options)
             } finally {
                 withContext(Dispatchers.Main) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -108,6 +112,7 @@ class DownloadForegroundService : LifecycleService() {
     private suspend fun runDownload(
         url: String,
         resultReceiver: ResultReceiver?,
+        options: Bundle?,
     ) {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
@@ -179,7 +184,8 @@ class DownloadForegroundService : LifecycleService() {
             }
 
         try {
-            val resultJson = module.callAttr("download", url, outDir, null, callback).toString()
+            val pythonOptions = options?.getString("cookiefile")?.let { mapOf("cookiefile" to it) }
+            val resultJson = module.callAttr("download", url, outDir, pythonOptions, callback).toString()
             val result = JSONObject(resultJson)
             val status = result.getString("status")
             val filePath = result.optString("file", "").takeIf { it.isNotEmpty() }

@@ -1,6 +1,7 @@
 package com.example.vidgrab.ui
 
 import android.Manifest
+import android.app.Activity
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -38,7 +39,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,6 +54,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vidgrab.R
+import com.example.vidgrab.util.CookieStorage
 import com.example.vidgrab.util.DownloadResult
 import com.example.vidgrab.vm.DownloadViewModel
 import java.io.File
@@ -67,6 +71,17 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
     LaunchedEffect(Unit) {
         viewModel.loadYtDlpVersion(context)
     }
+
+    var isLoggedIn by remember { mutableStateOf(CookieStorage.hasCookies(context)) }
+
+    val loginLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                isLoggedIn = true
+            }
+        }
 
     val notificationPermissionLauncher =
         rememberLauncherForActivityResult(
@@ -152,6 +167,39 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.download))
+            }
+
+            Text(
+                text =
+                    if (isLoggedIn) {
+                        stringResource(R.string.instagram_logged_in)
+                    } else {
+                        stringResource(R.string.instagram_not_logged_in)
+                    },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Button(
+                onClick = {
+                    if (isLoggedIn) {
+                        CookieStorage.clear(context)
+                        isLoggedIn = false
+                    } else {
+                        loginLauncher.launch(InstagramLoginActivity.newIntent(context))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    stringResource(
+                        if (isLoggedIn) {
+                            R.string.logout_instagram
+                        } else {
+                            R.string.login_instagram
+                        },
+                    ),
+                )
             }
 
             DownloadStatus(result = uiState.result)

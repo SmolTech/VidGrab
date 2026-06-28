@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.example.vidgrab.service.DownloadForegroundService
+import com.example.vidgrab.util.CookieStorage
 import com.example.vidgrab.util.DownloadResult
 import com.example.vidgrab.util.DownloadUiState
 import kotlinx.coroutines.Dispatchers
@@ -83,7 +84,13 @@ class DownloadViewModel : ViewModel() {
     fun startDownload(context: Context) {
         val url = _uiState.value.url.trim()
         if (url.isBlank()) return
-        DownloadForegroundService.start(context, url, resultReceiver)
+        val options =
+            if (CookieStorage.hasCookies(context)) {
+                Bundle().apply { putString("cookiefile", CookieStorage.cookieFile(context).absolutePath) }
+            } else {
+                null
+            }
+        DownloadForegroundService.start(context, url, resultReceiver, options)
     }
 
     fun reset() {

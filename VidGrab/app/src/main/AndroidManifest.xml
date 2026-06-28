@@ -30,6 +30,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.InstagramLoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.VidGrab" />
+
         <service
             android:name=".service.DownloadForegroundService"
             android:enabled="true"

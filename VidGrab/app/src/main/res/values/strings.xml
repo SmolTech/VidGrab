@@ -23,4 +23,10 @@
     <string name="error_no_video_player">No video player app found</string>
     <string name="version_unknown">unknown</string>
     <string name="powered_by">Powered by yt-dlp %1$s</string>
+
+    <string name="login_instagram">Log in to Instagram</string>
+    <string name="logout_instagram">Log out of Instagram</string>
+    <string name="login_instagram_title">Instagram Login</string>
+    <string name="instagram_logged_in">Instagram: logged in</string>
+    <string name="instagram_not_logged_in">Instagram: not logged in</string>
 </resources>
