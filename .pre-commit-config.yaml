@@ -1,0 +1,42 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+# Run from the repository root:
+#   pre-commit install
+#   pre-commit run --all-files
+
+repos:
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  # Kotlin linting and formatting
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.16.0
+    hooks:
+      - id: pretty-format-kotlin
+        args: [--autofix]
+        files: ^VidGrab/.*\.(kt|kts)$
+
+  # Python linting and formatting (Chaquopy downloader)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.0
+    hooks:
+      - id: ruff
+        files: ^VidGrab/app/src/main/python/.*\.py$
+      - id: ruff-format
+        files: ^VidGrab/app/src/main/python/.*\.py$
+
+  # SAST
+  - repo: https://github.com/semgrep/semgrep
+    rev: v1.110.0
+    hooks:
+      - id: semgrep
+        args: ['--config', 'p/default', '--error']
+        files: ^VidGrab/.*\.(kt|kts|py)$

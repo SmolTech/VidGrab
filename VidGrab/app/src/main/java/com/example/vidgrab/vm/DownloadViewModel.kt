@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class DownloadViewModel : ViewModel() {
-
     val uiState: StateFlow<DownloadUiState> = DownloadStateManager.state
 
     fun onUrlChange(url: String) {

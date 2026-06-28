@@ -6,8 +6,19 @@ package com.example.vidgrab.service
  */
 interface DownloadCallback {
     fun onStart(url: String)
-    fun onProgress(percent: Double, downloaded: Long, total: Long, speed: Long, eta: Int, filename: String)
+
+    fun onProgress(
+        percent: Double,
+        downloaded: Long,
+        total: Long,
+        speed: Long,
+        eta: Int,
+        filename: String,
+    )
+
     fun onConverting(filename: String)
+
     fun onComplete(file: String)
+
     fun onError(message: String)
 }

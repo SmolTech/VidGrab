@@ -18,9 +18,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -57,12 +57,13 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { _ ->
-        // Even if denied, we can still start the service; Android will just not show the notification.
-        viewModel.startDownload(context)
-    }
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { _ ->
+            // Even if denied, we can still start the service; Android will just not show the notification.
+            viewModel.startDownload(context)
+        }
 
     LaunchedEffect(uiState.result) {
         val result = uiState.result
@@ -76,25 +77,26 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(padding)
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(padding)
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = stringResource(R.string.instructions),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             OutlinedTextField(
@@ -113,14 +115,14 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
                                 val text = clip.getItemAt(0).text?.toString() ?: ""
                                 viewModel.onUrlChange(text)
                             }
-                        }
+                        },
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_paste),
-                            contentDescription = stringResource(R.string.paste)
+                            contentDescription = stringResource(R.string.paste),
                         )
                     }
-                }
+                },
             )
 
             Button(
@@ -135,7 +137,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
                     }
                 },
                 enabled = !uiState.isDownloading && uiState.url.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.download))
             }
@@ -147,7 +149,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
             Text(
                 text = stringResource(R.string.powered_by, getYtDlpVersion(context)),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -158,63 +160,69 @@ private fun DownloadStatus(result: DownloadResult) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         when (result) {
             is DownloadResult.Idle -> { /* nothing */ }
+
             is DownloadResult.Starting -> {
                 CircularProgressIndicator()
                 Text(stringResource(R.string.status_starting))
             }
+
             is DownloadResult.Progress -> {
                 LinearProgressIndicator(
                     progress = { result.percent / 100f },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
                     stringResource(
                         R.string.status_progress,
                         result.percent.toInt(),
                         formatBytes(result.downloaded),
-                        formatBytes(result.total)
-                    )
+                        formatBytes(result.total),
+                    ),
                 )
             }
+
             is DownloadResult.Converting -> {
                 CircularProgressIndicator()
                 Text(stringResource(R.string.status_converting))
             }
+
             is DownloadResult.Complete -> {
                 Text(
                     text = stringResource(R.string.status_complete),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 SelectionContainer {
                     Text(
                         text = result.file,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }
+
             is DownloadResult.Error -> {
                 Text(
                     text = result.message,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         }
     }
 }
 
-private fun getYtDlpVersion(context: Context): String {
-    return try {
-        val py = com.chaquo.python.Python.getInstance()
+private fun getYtDlpVersion(context: Context): String =
+    try {
+        val py =
+            com.chaquo.python.Python
+                .getInstance()
         py.getModule("downloader").callAttr("get_version").toString()
     } catch (e: Exception) {
         context.getString(R.string.version_unknown)
     }
-}
 
 private fun formatBytes(bytes: Long): String {
     if (bytes <= 0) return "0 B"

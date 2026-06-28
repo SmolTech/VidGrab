@@ -50,7 +50,9 @@ def download(url, out_dir, options=None, callback=None):
         dict: {"status": "ok" | "error", "file": str | None, "message": str}
     """
     if not url:
-        return json.dumps({"status": "error", "file": None, "message": "No URL provided"})
+        return json.dumps(
+            {"status": "error", "file": None, "message": "No URL provided"}
+        )
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -74,7 +76,13 @@ def download(url, out_dir, options=None, callback=None):
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
             if info is None:
-                return json.dumps({"status": "error", "file": None, "message": "Could not extract video info"})
+                return json.dumps(
+                    {
+                        "status": "error",
+                        "file": None,
+                        "message": "Could not extract video info",
+                    }
+                )
 
             filename = ydl.prepare_filename(info)
             # prepare_filename reflects the final extension; if post-processing changed it,
@@ -93,7 +101,9 @@ def download(url, out_dir, options=None, callback=None):
                 except Exception:
                     traceback.print_exc()
 
-            return json.dumps({"status": "ok", "file": filename, "message": "Download complete"})
+            return json.dumps(
+                {"status": "ok", "file": filename, "message": "Download complete"}
+            )
 
     except yt_dlp.utils.DownloadError as e:
         if callback is not None:
