@@ -29,4 +29,5 @@
     <string name="login_instagram_title">Instagram Login</string>
     <string name="instagram_logged_in">Instagram: logged in</string>
     <string name="instagram_not_logged_in">Instagram: not logged in</string>
+    <string name="dismiss">Dismiss</string>
 </resources>

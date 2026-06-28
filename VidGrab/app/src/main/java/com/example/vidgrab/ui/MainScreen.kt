@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +68,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
     val ytDlpVersion by viewModel.ytDlpVersion.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    var snackbarShown by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadYtDlpVersion(context)
@@ -93,9 +95,11 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
 
     LaunchedEffect(uiState.result) {
         val result = uiState.result
-        if (result is DownloadResult.Error) {
+        if (result is DownloadResult.Error && !snackbarShown) {
             snackbarHostState.showSnackbar(result.message)
-            viewModel.onErrorShown()
+            snackbarShown = true
+        } else if (result !is DownloadResult.Error) {
+            snackbarShown = false
         }
     }
 
@@ -272,6 +276,12 @@ private fun DownloadStatus(result: DownloadResult) {
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                }
+                Button(
+                    onClick = { viewModel.onErrorShown() },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.dismiss))
                 }
             }
         }
