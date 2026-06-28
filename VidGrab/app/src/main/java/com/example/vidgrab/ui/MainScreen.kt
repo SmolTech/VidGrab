@@ -266,11 +266,13 @@ private fun DownloadStatus(result: DownloadResult) {
             }
 
             is DownloadResult.Error -> {
-                Text(
-                    text = result.message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                SelectionContainer {
+                    Text(
+                        text = result.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
             }
         }
     }
