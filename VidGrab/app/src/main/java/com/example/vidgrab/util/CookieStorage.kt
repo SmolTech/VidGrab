@@ -14,16 +14,24 @@ object CookieStorage {
 
     fun hasCookies(context: Context): Boolean = cookieFile(context).exists()
 
+    /**
+     * Returns true if the stored cookies contain a session ID, which indicates
+     * the user is logged in.
+     */
+    fun hasSession(context: Context): Boolean {
+        val file = cookieFile(context)
+        if (!file.exists()) return false
+        return file.readLines().any { it.contains("\tsessionid\t") }
+    }
+
     fun saveCookies(
         context: Context,
         cookies: String,
-        domain: String = ".instagram.com",
     ) {
         val file = cookieFile(context)
         file.parentFile?.mkdirs()
 
-        // CookieManager returns "name1=value1; name2=value2"
-        val entries =
+        val pairs =
             cookies
                 .split("; ")
                 .mapNotNull { pair ->
@@ -32,8 +40,19 @@ object CookieStorage {
                     val name = pair.substring(0, eq).trim()
                     val value = pair.substring(eq + 1).trim()
                     if (name.isBlank()) return@mapNotNull null
-                    // Netscape format:
-                    // domain  flag  path  secure  expiration  name  value
+                    name to value
+                }
+
+        if (pairs.isEmpty()) return
+
+        // yt-dlp matches cookies by domain. Instagram sets cookies for
+        // .instagram.com (domain-wide) and sometimes www.instagram.com.
+        // Write entries for both to maximize compatibility.
+        val domains = listOf(".instagram.com", "www.instagram.com", "instagram.com")
+
+        val entries =
+            domains.flatMap { domain ->
+                pairs.map { (name, value) ->
                     listOf(
                         domain,
                         "TRUE",
@@ -44,6 +63,7 @@ object CookieStorage {
                         value,
                     ).joinToString("\t")
                 }
+            }
 
         file.writeText(
             buildString {

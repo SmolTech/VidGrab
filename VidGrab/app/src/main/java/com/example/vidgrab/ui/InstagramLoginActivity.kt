@@ -56,7 +56,11 @@ class InstagramLoginActivity : Activity() {
         val cookies = CookieManager.getInstance().getCookie(INSTAGRAM_HOME) ?: ""
         if (cookies.isNotBlank()) {
             CookieStorage.saveCookies(this, cookies)
-            setResult(Activity.RESULT_OK)
+            if (CookieStorage.hasSession(this)) {
+                setResult(Activity.RESULT_OK)
+            } else {
+                setResult(Activity.RESULT_CANCELED)
+            }
         } else {
             setResult(Activity.RESULT_CANCELED)
         }

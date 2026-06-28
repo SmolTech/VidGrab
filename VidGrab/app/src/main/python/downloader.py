@@ -88,6 +88,9 @@ def download(url, out_dir, cookiefile=None, callback=None):
         "no_warnings": True,
     }
     if cookiefile:
+        logger.info(
+            "Using cookie file: %s (exists=%s)", cookiefile, os.path.exists(cookiefile)
+        )
         opts["cookiefile"] = cookiefile
 
     _safe_call(callback, "onStart", url)

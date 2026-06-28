@@ -74,7 +74,7 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
         viewModel.loadYtDlpVersion(context)
     }
 
-    var isLoggedIn by remember { mutableStateOf(CookieStorage.hasCookies(context)) }
+    var isLoggedIn by remember { mutableStateOf(CookieStorage.hasSession(context)) }
 
     val loginLauncher =
         rememberLauncherForActivityResult(
