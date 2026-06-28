@@ -1,4 +1,4 @@
-package com.example.vidgrab.service
+package us.smoltech.vidgrab.service
 
 import android.app.PendingIntent
 import android.app.Service
@@ -13,14 +13,14 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
-import com.example.vidgrab.R
-import com.example.vidgrab.util.DownloadResult
-import com.example.vidgrab.util.MediaStoreHelper
-import com.example.vidgrab.util.NotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import us.smoltech.vidgrab.R
+import us.smoltech.vidgrab.util.DownloadResult
+import us.smoltech.vidgrab.util.MediaStoreHelper
+import us.smoltech.vidgrab.util.NotificationHelper
 import java.io.File
 
 class DownloadForegroundService : LifecycleService() {

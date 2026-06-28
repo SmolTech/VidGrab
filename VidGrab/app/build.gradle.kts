@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.vidgrab"
+    namespace = "us.smoltech.vidgrab"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.vidgrab"
+        applicationId = "us.smoltech.vidgrab"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

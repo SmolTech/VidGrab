@@ -1,4 +1,4 @@
-package com.example.vidgrab.ui
+package us.smoltech.vidgrab.ui
 
 import android.Manifest
 import android.app.Activity
@@ -54,11 +54,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.vidgrab.R
-import com.example.vidgrab.service.DownloadForegroundService
-import com.example.vidgrab.util.CookieStorage
-import com.example.vidgrab.util.DownloadResult
-import com.example.vidgrab.vm.DownloadViewModel
+import us.smoltech.vidgrab.R
+import us.smoltech.vidgrab.service.DownloadForegroundService
+import us.smoltech.vidgrab.util.CookieStorage
+import us.smoltech.vidgrab.util.DownloadResult
+import us.smoltech.vidgrab.vm.DownloadViewModel
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)

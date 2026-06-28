@@ -1,11 +1,11 @@
-package com.example.vidgrab.util
+package us.smoltech.vidgrab.util
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.example.vidgrab.R
+import us.smoltech.vidgrab.R
 
 object NotificationHelper {
     const val CHANNEL_ID = "vidgrab_downloads"

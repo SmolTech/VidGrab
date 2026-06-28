@@ -1,4 +1,4 @@
-package com.example.vidgrab.util
+package us.smoltech.vidgrab.util
 
 sealed class DownloadResult {
     data object Idle : DownloadResult()

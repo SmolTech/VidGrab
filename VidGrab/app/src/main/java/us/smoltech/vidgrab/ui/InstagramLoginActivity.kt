@@ -1,4 +1,4 @@
-package com.example.vidgrab.ui
+package us.smoltech.vidgrab.ui
 
 import android.app.Activity
 import android.content.Intent
@@ -8,8 +8,8 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.example.vidgrab.R
-import com.example.vidgrab.util.CookieStorage
+import us.smoltech.vidgrab.R
+import us.smoltech.vidgrab.util.CookieStorage
 
 class InstagramLoginActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {

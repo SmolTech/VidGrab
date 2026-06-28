@@ -1,4 +1,4 @@
-package com.example.vidgrab.vm
+package us.smoltech.vidgrab.vm
 
 import android.content.Context
 import android.os.Bundle
@@ -9,16 +9,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
-import com.example.vidgrab.service.DownloadForegroundService
-import com.example.vidgrab.util.CookieStorage
-import com.example.vidgrab.util.DownloadResult
-import com.example.vidgrab.util.DownloadUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import us.smoltech.vidgrab.service.DownloadForegroundService
+import us.smoltech.vidgrab.util.CookieStorage
+import us.smoltech.vidgrab.util.DownloadResult
+import us.smoltech.vidgrab.util.DownloadUiState
 
 class DownloadViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(DownloadUiState())

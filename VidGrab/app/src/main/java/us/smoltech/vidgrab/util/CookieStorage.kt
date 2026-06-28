@@ -1,4 +1,4 @@
-package com.example.vidgrab.util
+package us.smoltech.vidgrab.util
 
 import android.content.Context
 import java.io.File

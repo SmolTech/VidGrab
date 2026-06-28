@@ -1,4 +1,4 @@
-package com.example.vidgrab.ui.theme
+package us.smoltech.vidgrab.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

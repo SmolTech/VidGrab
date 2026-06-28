@@ -1,4 +1,4 @@
-package com.example.vidgrab.service
+package us.smoltech.vidgrab.service
 
 /**
  * Callback interface invoked from Python/yt-dlp during a download.
