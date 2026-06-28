@@ -1,6 +1,7 @@
 package us.smoltech.vidgrab.util
 
 import android.content.Context
+import android.util.Log
 import java.io.File
 
 /**
@@ -9,6 +10,7 @@ import java.io.File
 object CookieStorage {
     private const val COOKIE_DIR = "cookies"
     private const val COOKIE_FILE = "instagram.txt"
+    private const val TAG = "CookieStorage"
 
     fun cookieFile(context: Context): File = File(context.cacheDir, "$COOKIE_DIR/$COOKIE_FILE")
 
@@ -39,30 +41,32 @@ object CookieStorage {
                     if (eq <= 0) return@mapNotNull null
                     val name = pair.substring(0, eq).trim()
                     val value = pair.substring(eq + 1).trim()
-                    if (name.isBlank()) return@mapNotNull null
+                    if (name.isBlank() || value.isBlank()) return@mapNotNull null
                     name to value
-                }
+                }.distinctBy { it.first }
 
-        if (pairs.isEmpty()) return
+        if (pairs.isEmpty()) {
+            Log.w(TAG, "No cookie pairs to save")
+            return
+        }
 
-        // yt-dlp matches cookies by domain. Instagram sets cookies for
-        // .instagram.com (domain-wide) and sometimes www.instagram.com.
-        // Write entries for both to maximize compatibility.
-        val domains = listOf(".instagram.com", "www.instagram.com", "instagram.com")
+        Log.d(TAG, "Saving ${pairs.size} cookies: ${pairs.joinToString { it.first }}")
+
+        // Instagram cookies are domain-wide for .instagram.com. Using the leading dot
+        // makes them valid for instagram.com and all subdomains (www, i, etc.).
+        val domain = ".instagram.com"
 
         val entries =
-            domains.flatMap { domain ->
-                pairs.map { (name, value) ->
-                    listOf(
-                        domain,
-                        "TRUE",
-                        "/",
-                        "FALSE",
-                        "0",
-                        name,
-                        value,
-                    ).joinToString("\t")
-                }
+            pairs.map { (name, value) ->
+                listOf(
+                    domain,
+                    "TRUE",
+                    "/",
+                    "FALSE",
+                    "0",
+                    name,
+                    value,
+                ).joinToString("\t")
             }
 
         file.writeText(
@@ -71,6 +75,8 @@ object CookieStorage {
                 entries.forEach { appendLine(it) }
             },
         )
+
+        Log.d(TAG, "Wrote cookie file: ${file.absolutePath}")
     }
 
     fun clear(context: Context) {

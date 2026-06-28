@@ -3,26 +3,35 @@ package us.smoltech.vidgrab.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import us.smoltech.vidgrab.R
 import us.smoltech.vidgrab.util.CookieStorage
 
 class InstagramLoginActivity : Activity() {
+    private lateinit var webView: WebView
+    private var hasFinished = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_instagram_login)
         title = getString(R.string.login_instagram_title)
 
-        val webView = findViewById<WebView>(R.id.webview)
+        webView = findViewById(R.id.webview)
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         cookieManager.removeAllCookies(null)
 
-        webView.settings.javaScriptEnabled = true
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            cacheMode = WebSettings.LOAD_NO_CACHE
+        }
         webView.webChromeClient = WebChromeClient()
         webView.webViewClient =
             object : WebViewClient() {
@@ -31,8 +40,9 @@ class InstagramLoginActivity : Activity() {
                     request: WebResourceRequest?,
                 ): Boolean {
                     val url = request?.url?.toString() ?: return false
-                    if (url.startsWith(INSTAGRAM_HOME)) {
-                        saveCookiesAndFinish()
+                    Log.d(TAG, "Navigating to: $url")
+                    if (isInstagramHome(url)) {
+                        scheduleFinish()
                         return true
                     }
                     return false
@@ -43,8 +53,9 @@ class InstagramLoginActivity : Activity() {
                     url: String?,
                 ) {
                     super.onPageFinished(view, url)
-                    if (url != null && url.startsWith(INSTAGRAM_HOME)) {
-                        saveCookiesAndFinish()
+                    Log.d(TAG, "Page finished: $url")
+                    if (url != null && isInstagramHome(url)) {
+                        scheduleFinish()
                     }
                 }
             }
@@ -52,24 +63,46 @@ class InstagramLoginActivity : Activity() {
         webView.loadUrl(LOGIN_URL)
     }
 
-    private fun saveCookiesAndFinish() {
-        val cookies = CookieManager.getInstance().getCookie(INSTAGRAM_HOME) ?: ""
-        if (cookies.isNotBlank()) {
-            CookieStorage.saveCookies(this, cookies)
-            if (CookieStorage.hasSession(this)) {
-                setResult(Activity.RESULT_OK)
-            } else {
-                setResult(Activity.RESULT_CANCELED)
-            }
-        } else {
-            setResult(Activity.RESULT_CANCELED)
-        }
-        finish()
+    private fun scheduleFinish() {
+        if (hasFinished) return
+        hasFinished = true
+        // Cookies may arrive shortly after the redirect. Wait briefly and retry a few times.
+        trySaveCookies(attempt = 0)
     }
 
+    private fun trySaveCookies(attempt: Int) {
+        val manager = CookieManager.getInstance()
+        val cookies = manager.getCookie(INSTAGRAM_HOME) ?: ""
+        val rawInstagram = manager.getCookie("https://instagram.com/") ?: ""
+        Log.d(TAG, "Attempt $attempt - www cookies length: ${cookies.length}, instagram.com length: ${rawInstagram.length}")
+
+        val combined = listOf(cookies, rawInstagram).filter { it.isNotBlank() }.joinToString("; ")
+
+        if (combined.isNotBlank()) {
+            CookieStorage.saveCookies(this, combined)
+        }
+
+        if (CookieStorage.hasSession(this) || attempt >= MAX_ATTEMPTS) {
+            val hasSession = CookieStorage.hasSession(this)
+            Log.d(TAG, "Finishing. Has sessionid: $hasSession")
+            setResult(if (hasSession) Activity.RESULT_OK else Activity.RESULT_CANCELED)
+            finish()
+        } else {
+            webView.postDelayed({ trySaveCookies(attempt + 1) }, RETRY_DELAY_MS)
+        }
+    }
+
+    private fun isInstagramHome(url: String): Boolean =
+        url.startsWith(INSTAGRAM_HOME) ||
+            url.equals("https://instagram.com/", ignoreCase = true) ||
+            url.equals("https://instagram.com", ignoreCase = true)
+
     companion object {
+        private const val TAG = "InstagramLogin"
         private const val LOGIN_URL = "https://www.instagram.com/accounts/login/"
         private const val INSTAGRAM_HOME = "https://www.instagram.com/"
+        private const val MAX_ATTEMPTS = 5
+        private const val RETRY_DELAY_MS = 800L
 
         fun newIntent(context: android.content.Context): Intent = Intent(context, InstagramLoginActivity::class.java)
     }
