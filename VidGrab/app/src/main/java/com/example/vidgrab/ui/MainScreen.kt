@@ -3,9 +3,13 @@ package com.example.vidgrab.ui
 import android.Manifest
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -44,10 +48,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vidgrab.R
 import com.example.vidgrab.util.DownloadResult
 import com.example.vidgrab.vm.DownloadViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,6 +211,7 @@ private fun DownloadStatus(result: DownloadResult) {
                     Text(
                         text = result.file,
                         style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.clickable { openVideo(context, result.file) },
                     )
                 }
             }
@@ -217,6 +224,35 @@ private fun DownloadStatus(result: DownloadResult) {
                 )
             }
         }
+    }
+}
+
+private fun openVideo(
+    context: Context,
+    file: String,
+) {
+    val uri =
+        if (file.startsWith("content://")) {
+            Uri.parse(file)
+        } else {
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                File(file),
+            )
+        }
+
+    val intent =
+        Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "video/*")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+    try {
+        context.startActivity(intent)
+    } catch (e: android.content.ActivityNotFoundException) {
+        Toast.makeText(context, R.string.error_no_video_player, Toast.LENGTH_SHORT).show()
     }
 }
 
