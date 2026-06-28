@@ -184,7 +184,10 @@ class DownloadForegroundService : LifecycleService() {
             }
 
         try {
-            val pythonOptions = options?.getString("cookiefile")?.let { mapOf("cookiefile" to it) }
+            val pythonOptions =
+                options?.getString("cookiefile")?.let {
+                    HashMap<String, String>().apply { put("cookiefile", it) }
+                }
             val resultJson = module.callAttr("download", url, outDir, pythonOptions, callback).toString()
             val result = JSONObject(resultJson)
             val status = result.getString("status")
