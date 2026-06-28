@@ -206,7 +206,10 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
                 )
             }
 
-            DownloadStatus(result = uiState.result)
+            DownloadStatus(
+                result = uiState.result,
+                onDismiss = { viewModel.onErrorShown() },
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -220,7 +223,10 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
 }
 
 @Composable
-private fun DownloadStatus(result: DownloadResult) {
+private fun DownloadStatus(
+    result: DownloadResult,
+    onDismiss: () -> Unit,
+) {
     val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -278,7 +284,7 @@ private fun DownloadStatus(result: DownloadResult) {
                     )
                 }
                 Button(
-                    onClick = { viewModel.onErrorShown() },
+                    onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.dismiss))
