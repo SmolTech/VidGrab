@@ -40,3 +40,5 @@ repos:
       - id: semgrep
         args: ['--config', 'p/default', '--error']
         files: ^VidGrab/.*\.(kt|kts|py)$
+        additional_dependencies: [setuptools]
+
