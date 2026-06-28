@@ -57,14 +57,14 @@ def _is_valid_url(url):
     return parsed.scheme in ALLOWED_SCHEMES and parsed.netloc
 
 
-def download(url, out_dir, options=None, callback=None):
+def download(url, out_dir, cookiefile=None, callback=None):
     """
     Download a video with yt-dlp.
 
     Args:
         url: The video URL.
         out_dir: Directory where files are written.
-        options: Optional dict of yt-dlp options (e.g. format selection).
+        cookiefile: Optional path to a Netscape-format cookie file.
         callback: Optional object with onStart/onProgress/onConverting/onComplete/onError methods.
 
     Returns:
@@ -87,8 +87,8 @@ def download(url, out_dir, options=None, callback=None):
         "quiet": True,
         "no_warnings": True,
     }
-    if options:
-        opts.update(options)
+    if cookiefile:
+        opts["cookiefile"] = cookiefile
 
     _safe_call(callback, "onStart", url)
 
