@@ -79,3 +79,5 @@ Configured hooks:
 - `ktlint` -- lints and auto-formats Kotlin files
 - `ruff` / `ruff-format` -- lints and formats the Chaquopy Python downloader
 - `semgrep` -- runs SAST rules against Kotlin and Python source
+
+Semgrep also runs in CI on every push and pull request using Python 3.12 (see `.github/workflows/semgrep.yml`).
