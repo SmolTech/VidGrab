@@ -18,8 +18,8 @@ This repository contains **VidGrab**, an Android app that downloads videos using
 
 ## CI
 
-- **Semgrep SAST** — runs on every push/PR using Python 3.12 (`.github/workflows/semgrep.yml`)
-- **Build debug APK** — builds the Android debug APK on every push/PR (`.github/workflows/build.yml`)
+- **Semgrep SAST** — runs on every push/PR using Python 3.12
+- **Build debug APK** — builds the Android debug APK after semgrep passes (`.github/workflows/build.yml`)
 
 ## Local development
 

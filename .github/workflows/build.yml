@@ -1,4 +1,4 @@
-name: Build Android Debug APK
+name: CI
 
 on:
   push:
@@ -7,9 +7,29 @@ on:
     branches: [main, master]
 
 jobs:
-  build:
-    name: Build debug APK
+  semgrep:
+    name: Semgrep SAST
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run semgrep hook
+        run: pre-commit run semgrep --all-files
+
+  build:
+    name: Build Android Debug APK
+    runs-on: ubuntu-latest
+    needs: semgrep
 
     steps:
       - name: Checkout code
