@@ -30,4 +30,6 @@
     <string name="instagram_logged_in">Instagram: logged in</string>
     <string name="instagram_not_logged_in">Instagram: not logged in</string>
     <string name="dismiss">Dismiss</string>
+    <string name="cancel">Cancel</string>
+    <string name="notification_action_cancel">Cancel</string>
 </resources>

@@ -27,6 +27,13 @@ def _safe_call(callback, method_name, *args, **kwargs):
 
 def _progress_hook(callback):
     def hook(info):
+        if callback is not None:
+            try:
+                if callback.isCancelled():
+                    raise yt_dlp.utils.DownloadError("Download cancelled")
+            except Exception:
+                traceback.print_exc()
+
         status = info.get("status")
         if status == "downloading":
             downloaded = info.get("downloaded_bytes", 0)

@@ -55,6 +55,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vidgrab.R
+import com.example.vidgrab.service.DownloadForegroundService
 import com.example.vidgrab.util.CookieStorage
 import com.example.vidgrab.util.DownloadResult
 import com.example.vidgrab.vm.DownloadViewModel
@@ -171,6 +172,15 @@ fun MainScreen(viewModel: DownloadViewModel = viewModel()) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.download))
+            }
+
+            if (uiState.isDownloading) {
+                Button(
+                    onClick = { DownloadForegroundService.cancel(context) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
 
             Text(

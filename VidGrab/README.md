@@ -19,7 +19,7 @@ A self-contained Android app that downloads videos using [yt-dlp](https://github
 
 ## Build
 
-Requires Java 21 and the Android SDK.
+Requires Java 21, the Android SDK, and Python 3.14 on the build machine (Chaquopy uses it to bundle yt-dlp).
 
 ```bash
 cd VidGrab

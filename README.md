@@ -26,7 +26,7 @@ This repository contains **VidGrab**, an Android app that downloads videos using
 See [`VidGrab/README.md`](./VidGrab/README.md) for:
 
 - Tech stack and features
-- Build prerequisites (Java 21, Android SDK)
+- Build prerequisites (Java 21, Android SDK, Python 3.14 for Chaquopy)
 - How to install and run the app
 - Pre-commit hook setup
 

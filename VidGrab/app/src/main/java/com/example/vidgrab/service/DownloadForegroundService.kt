@@ -1,5 +1,6 @@
 package com.example.vidgrab.service
 
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -41,6 +42,7 @@ class DownloadForegroundService : LifecycleService() {
         const val EXTRA_FILE = "file"
         const val EXTRA_MESSAGE = "message"
         const val EXTRA_OPTIONS = "extra_options"
+        const val ACTION_CANCEL = "action_cancel"
 
         fun start(
             context: Context,
@@ -56,7 +58,17 @@ class DownloadForegroundService : LifecycleService() {
                 }
             context.startForegroundService(intent)
         }
+
+        fun cancel(context: Context) {
+            val intent =
+                Intent(context, DownloadForegroundService::class.java).apply {
+                    action = ACTION_CANCEL
+                }
+            context.startService(intent)
+        }
     }
+
+    private var isCancelled = false
 
     override fun onCreate() {
         super.onCreate()
@@ -68,8 +80,21 @@ class DownloadForegroundService : LifecycleService() {
         flags: Int,
         startId: Int,
     ): Int {
+        if (intent?.action == ACTION_CANCEL) {
+            isCancelled = true
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf(startId)
+            return Service.START_NOT_STICKY
+        }
+
         val url = intent?.getStringExtra(EXTRA_URL)
-        val resultReceiver = intent?.getParcelableExtra<ResultReceiver>(EXTRA_RESULT_RECEIVER)
+        val resultReceiver =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent?.getParcelableExtra(EXTRA_RESULT_RECEIVER, ResultReceiver::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent?.getParcelableExtra(EXTRA_RESULT_RECEIVER)
+            }
         val options = intent?.getBundleExtra(EXTRA_OPTIONS)
 
         if (url.isNullOrBlank()) {
@@ -85,6 +110,17 @@ class DownloadForegroundService : LifecycleService() {
                     title = getString(R.string.notification_download_starting),
                     content = url,
                     progress = 0,
+                ).addAction(
+                    0,
+                    getString(R.string.notification_action_cancel),
+                    PendingIntent.getService(
+                        this,
+                        0,
+                        Intent(this, DownloadForegroundService::class.java).apply {
+                            action = ACTION_CANCEL
+                        },
+                        PendingIntent.FLAG_IMMUTABLE,
+                    ),
                 ).build()
 
         startForeground(NotificationHelper.NOTIFICATION_ID, initialNotification)
@@ -181,6 +217,8 @@ class DownloadForegroundService : LifecycleService() {
                         Bundle().apply { putString(EXTRA_MESSAGE, message) },
                     )
                 }
+
+                override fun isCancelled(): Boolean = this@DownloadForegroundService.isCancelled
             }
 
         try {

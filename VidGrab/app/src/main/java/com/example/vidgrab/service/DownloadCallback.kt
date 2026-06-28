@@ -21,4 +21,6 @@ interface DownloadCallback {
     fun onComplete(file: String)
 
     fun onError(message: String)
+
+    fun isCancelled(): Boolean = false
 }
