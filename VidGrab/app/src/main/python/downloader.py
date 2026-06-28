@@ -81,7 +81,7 @@ def download(url, out_dir, options=None, callback=None):
     os.makedirs(out_dir, exist_ok=True)
 
     opts = {
-        "outtmpl": os.path.join(out_dir, "%(title)s [%(id)s].%(ext)s"),
+        "outtmpl": os.path.join(out_dir, "%(title).80B [%(id)s].%(ext)s"),
         "progress_hooks": [_progress_hook(callback)] if callback else [],
         "noplaylist": True,
         "quiet": True,
