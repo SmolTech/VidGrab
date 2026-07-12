@@ -1,4 +1,4 @@
-# downloader
+# VidGrab
 
 This repository contains **VidGrab**, an Android app that downloads videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp) via [Chaquopy](https://chaquo.com/chaquopy/).
 

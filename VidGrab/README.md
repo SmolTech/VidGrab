@@ -50,7 +50,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ## Notes
 
-- Chaquopy's free edition is used. Distribution may require attribution; see the [Chaquopy license](https://chaquo.com/chaquopy/license/).
+- Chaquopy is open-source under the MIT license; see the [Chaquopy license](https://chaquo.com/chaquopy/license/).
 - The APK is large (~50 MB) because it bundles Python and yt-dlp.
 - On Android 8–9 (API 26–28) the app falls back to saving files in its private cache if MediaStore insertion fails. Gallery saving works best on Android 10+.
 - Chaquopy 17 with Python 3.14 only provides native libraries for `arm64-v8a` and `x86_64`, so 32-bit `armeabi-v7a` devices are not supported.
