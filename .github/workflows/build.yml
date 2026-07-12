@@ -7,13 +7,12 @@ on:
   pull_request:
     branches: [main, master]
 
-permissions:
-  contents: write
-
 jobs:
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -31,9 +30,11 @@ jobs:
         run: pre-commit run semgrep --all-files
 
   build:
-    name: Build Android Debug APK
+    name: Build Android Release APK
     runs-on: ubuntu-latest
     needs: semgrep
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -56,16 +57,31 @@ jobs:
       - name: Accept Android licenses
         run: yes | sdkmanager --licenses
 
-      - name: Build debug APK
-        run: |
-          cd VidGrab
-          ./gradlew assembleDebug
+      - name: Verify version for tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: python .github/scripts/check-version.py
 
-      - name: Upload debug APK
+      - name: Decode release keystore
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+        run: |
+          echo "$SIGNING_KEY_BASE64" | base64 -d > "${GITHUB_WORKSPACE}/VidGrab/app/release.keystore"
+
+      - name: Build release APK
+        working-directory: VidGrab
+        env:
+          SIGNING_STORE_FILE: ${{ startsWith(github.ref, 'refs/tags/v') && format('{0}/VidGrab/app/release.keystore', github.workspace) || '' }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: VidGrab/app/build/outputs/apk/debug/app-debug.apk
+          name: release-apk
+          path: VidGrab/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
   release:
@@ -73,16 +89,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
 
     steps:
-      - name: Download debug APK
+      - name: Download release APK
         uses: actions/download-artifact@v4
         with:
-          name: debug-apk
+          name: release-apk
           path: ./apk
+
+      - name: Print signing certificate fingerprint
+        run: |
+          keytool -printcert -jarfile ./apk/app-release.apk |
+            sed -n 's/[[:space:]]*SHA256: //p' |
+            tr -d ':' | tr '[:upper:]' '[:lower:]' > fingerprint.txt
+          echo "Signing certificate SHA-256 fingerprint:"
+          cat fingerprint.txt
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./apk/app-debug.apk
+          files: ./apk/app-release.apk
           generate_release_notes: true

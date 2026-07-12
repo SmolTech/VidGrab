@@ -21,7 +21,8 @@ This ia an AI developed app, built with Kimi.
 ## CI
 
 - **Semgrep SAST** — runs on every push/PR using Python 3.12
-- **Build debug APK** — builds the Android debug APK after semgrep passes (`.github/workflows/build.yml`)
+- **Build release APK** — builds the Android release APK after semgrep passes (`.github/workflows/build.yml`)
+- **Publish GitHub Release** — on `v*` tags, signs the release APK and attaches it to a GitHub Release
 
 ## Local development
 
@@ -42,6 +43,52 @@ export ANDROID_HOME=/path/to/android-sdk
 ```
 
 The debug APK is written to `VidGrab/app/build/outputs/apk/debug/app-debug.apk`.
+
+## Releasing
+
+Tags drive releases. Create a release locally or on GitHub with a tag like `v1.2.0`:
+
+```bash
+git tag -a v1.2.0 -m "Release 1.2.0"
+git push origin v1.2.0
+```
+
+Before pushing the tag, make sure:
+
+- `versionName` and `versionCode` in `VidGrab/app/build.gradle.kts` are bumped.
+- `CurrentVersion` and `CurrentVersionCode` in `metadata/us.smoltech.vidgrab.yml` match.
+
+The CI workflow will verify these values match the tag, build a release APK, sign it, and attach it to a GitHub Release.
+
+### Required GitHub secrets
+
+To sign the release APK, create these repository secrets:
+
+| Secret | Value |
+|--------|-------|
+| `SIGNING_KEY_BASE64` | Base64-encoded release keystore file |
+| `SIGNING_STORE_PASSWORD` | Keystore password |
+| `SIGNING_KEY_ALIAS` | Key alias |
+| `SIGNING_KEY_PASSWORD` | Key password |
+
+Generate a keystore if you don’t have one:
+
+```bash
+keytool -genkey -v \
+  -keystore vidgrab-release.keystore \
+  -alias vidgrab \
+  -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Then base64-encode it for the secret:
+
+```bash
+base64 -w0 vidgrab-release.keystore
+```
+
+### F-Droid
+
+F-Droid builds the app from source using the recipe in `metadata/us.smoltech.vidgrab.yml`. The GitHub Release APK is the upstream-signed reference that F-Droid can use for reproducible-build verification.
 
 ## Pre-commit hooks
 
