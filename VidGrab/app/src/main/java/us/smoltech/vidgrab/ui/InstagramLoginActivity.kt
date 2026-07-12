@@ -31,7 +31,11 @@ class InstagramLoginActivity : Activity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             cacheMode = WebSettings.LOAD_NO_CACHE
+            // Use a desktop Chrome UA so Instagram doesn't block the WebView and so the
+            // login session fingerprint matches what yt-dlp will send later.
+            userAgentString = DESKTOP_USER_AGENT
         }
+        CookieStorage.saveUserAgent(this, DESKTOP_USER_AGENT)
         webView.webChromeClient = WebChromeClient()
         webView.webViewClient =
             object : WebViewClient() {
@@ -103,6 +107,10 @@ class InstagramLoginActivity : Activity() {
         private const val INSTAGRAM_HOME = "https://www.instagram.com/"
         private const val MAX_ATTEMPTS = 5
         private const val RETRY_DELAY_MS = 800L
+
+        // A current desktop Chrome UA. Keep this in sync with the version passed to yt-dlp.
+        private const val DESKTOP_USER_AGENT =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
         fun newIntent(context: android.content.Context): Intent = Intent(context, InstagramLoginActivity::class.java)
     }

@@ -10,11 +10,35 @@ import java.io.File
 object CookieStorage {
     private const val COOKIE_DIR = "cookies"
     private const val COOKIE_FILE = "instagram.txt"
+    private const val USER_AGENT_FILE = "instagram_ua.txt"
     private const val TAG = "CookieStorage"
 
-    fun cookieFile(context: Context): File = File(context.cacheDir, "$COOKIE_DIR/$COOKIE_FILE")
+    fun cookieFile(context: Context): File = File(context.filesDir, "$COOKIE_DIR/$COOKIE_FILE")
+
+    private fun userAgentFile(context: Context): File = File(context.filesDir, "$COOKIE_DIR/$USER_AGENT_FILE")
 
     fun hasCookies(context: Context): Boolean = cookieFile(context).exists()
+
+    /**
+     * Saves the user agent that was used to log in. yt-dlp should reuse the same UA
+     * because Instagram sessions are often tied to the login fingerprint.
+     */
+    fun saveUserAgent(
+        context: Context,
+        userAgent: String,
+    ) {
+        val file = userAgentFile(context)
+        file.parentFile?.mkdirs()
+        file.writeText(userAgent.trim())
+    }
+
+    /**
+     * Returns the stored login user agent, or null if none was saved.
+     */
+    fun userAgent(context: Context): String? {
+        val file = userAgentFile(context)
+        return if (file.exists()) file.readText().trim() else null
+    }
 
     /**
      * Returns true if the stored cookies contain a session ID, which indicates
@@ -35,7 +59,7 @@ object CookieStorage {
 
         val pairs =
             cookies
-                .split("; ")
+                .split(";\\s*".toRegex())
                 .mapNotNull { pair ->
                     val eq = pair.indexOf('=')
                     if (eq <= 0) return@mapNotNull null
@@ -81,5 +105,6 @@ object CookieStorage {
 
     fun clear(context: Context) {
         cookieFile(context).delete()
+        userAgentFile(context).delete()
     }
 }

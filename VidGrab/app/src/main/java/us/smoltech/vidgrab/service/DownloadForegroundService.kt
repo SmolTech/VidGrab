@@ -224,11 +224,12 @@ class DownloadForegroundService : LifecycleService() {
 
         try {
             val cookieFile = options?.getString("cookiefile")
-            val resultJson = module.callAttr("download", url, outDir, cookieFile, callback).toString()
+            val userAgent = options?.getString("user_agent")
+            val resultJson = module.callAttr("download", url, outDir, cookieFile, userAgent, callback).toString()
             val result = JSONObject(resultJson)
             val status = result.getString("status")
             val filePath = result.optString("file", "").takeIf { it.isNotEmpty() }
-            val message = result.getString("message")
+            val message = result.optString("message", getString(R.string.error_unknown))
 
             if (status == "ok" && filePath != null) {
                 val sourceFile = File(filePath)

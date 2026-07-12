@@ -86,7 +86,10 @@ class DownloadViewModel : ViewModel() {
         if (url.isBlank()) return
         val options =
             if (CookieStorage.hasSession(context)) {
-                Bundle().apply { putString("cookiefile", CookieStorage.cookieFile(context).absolutePath) }
+                Bundle().apply {
+                    putString("cookiefile", CookieStorage.cookieFile(context).absolutePath)
+                    CookieStorage.userAgent(context)?.let { putString("user_agent", it) }
+                }
             } else {
                 null
             }

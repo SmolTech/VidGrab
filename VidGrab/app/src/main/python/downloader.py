@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import traceback
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlparse, urlencode, urlunparse
 
 import yt_dlp
 
@@ -12,6 +12,9 @@ logger = logging.getLogger("downloader")
 
 
 ALLOWED_SCHEMES = {"http", "https"}
+
+# Query parameters that are safe to strip before passing a share URL to yt-dlp.
+_STRIP_PARAMS = {"igsh", "igshid"}
 
 
 def _safe_call(callback, method_name, *args, **kwargs):
@@ -64,7 +67,23 @@ def _is_valid_url(url):
     return parsed.scheme in ALLOWED_SCHEMES and parsed.netloc
 
 
-def download(url, out_dir, cookiefile=None, callback=None):
+def _sanitize_url(url):
+    """Remove Instagram share/tracking parameters that can confuse yt-dlp."""
+    parsed = urlparse(url)
+    if not parsed.query:
+        return url
+    pairs = parse_qsl(parsed.query, keep_blank_values=True)
+    filtered = [
+        (k, v)
+        for k, v in pairs
+        if k.lower() not in _STRIP_PARAMS and not k.lower().startswith("utm_")
+    ]
+    if len(filtered) == len(pairs):
+        return url
+    return urlunparse(parsed._replace(query=urlencode(filtered)))
+
+
+def download(url, out_dir, cookiefile=None, user_agent=None, callback=None):
     """
     Download a video with yt-dlp.
 
@@ -72,6 +91,7 @@ def download(url, out_dir, cookiefile=None, callback=None):
         url: The video URL.
         out_dir: Directory where files are written.
         cookiefile: Optional path to a Netscape-format cookie file.
+        user_agent: Optional user agent string to use for HTTP requests.
         callback: Optional object with onStart/onProgress/onConverting/onComplete/onError methods.
 
     Returns:
@@ -81,6 +101,8 @@ def download(url, out_dir, cookiefile=None, callback=None):
         return json.dumps(
             {"status": "error", "file": None, "message": "No URL provided"}
         )
+
+    url = _sanitize_url(url)
 
     if not _is_valid_url(url):
         return json.dumps({"status": "error", "file": None, "message": "Invalid URL"})
@@ -94,6 +116,8 @@ def download(url, out_dir, cookiefile=None, callback=None):
         "quiet": True,
         "no_warnings": True,
     }
+    if user_agent:
+        opts["user_agent"] = user_agent
     if cookiefile:
         logger.info(
             "Using cookie file: %s (exists=%s)", cookiefile, os.path.exists(cookiefile)
