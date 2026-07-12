@@ -30,8 +30,8 @@ Builds:
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.1.1'
-CurrentVersionCode: 3
+CurrentVersion: '1.1.2'
+CurrentVersionCode: 4
 
 MaintainerNotes: |
     The app embeds Python via Chaquopy and bundles yt-dlp at build time.
