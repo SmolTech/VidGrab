@@ -1,0 +1,40 @@
+Categories:
+  - Internet
+  - Multimedia
+
+License: GPL-3.0-or-later
+
+AuthorName: SmolTech
+
+SourceCode: https://github.com/SmolTech/VidGrab
+IssueTracker: https://github.com/SmolTech/VidGrab/issues
+Changelog: https://github.com/SmolTech/VidGrab/releases
+
+Summary: Download videos with yt-dlp
+Description: |
+    VidGrab is a self-contained Android app that downloads videos using
+    yt-dlp. Paste a supported URL, tap Download, and the app saves the
+    video to your device's Movies/VidGrab folder via a foreground service
+    with progress notifications.
+
+RepoType: git
+Repo: https://github.com/SmolTech/VidGrab.git
+
+Builds:
+  - versionName: '1.1.0'
+    versionCode: 2
+    commit: v1.1.0
+    subdir: VidGrab
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.1.0'
+CurrentVersionCode: 2
+
+MaintainerNotes: |
+    The app embeds Python via Chaquopy and bundles yt-dlp at build time.
+    Chaquopy is MIT-licensed open source. yt-dlp is Unlicense. F-Droid's
+    buildserver will need to fetch the yt-dlp wheel; this is handled by
+    the Chaquopy plugin using its configured package repository.
