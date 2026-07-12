@@ -80,10 +80,10 @@ keytool -genkey -v \
   -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Then base64-encode it for the secret:
+Then base64-encode it for the secret (works on Linux and macOS):
 
 ```bash
-base64 -w0 vidgrab-release.keystore
+base64 vidgrab-release.keystore | tr -d '\n'
 ```
 
 ### F-Droid
