@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "us.smoltech.vidgrab"
     compileSdk = 36
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "us.smoltech.vidgrab"
