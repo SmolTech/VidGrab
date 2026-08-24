@@ -82,7 +82,7 @@ chaquopy {
         version = "3.14"
         buildPython("python3.14")
         pip {
-            install("yt-dlp==2026.7.4")
+            install("yt-dlp==2026.08.19")
         }
     }
     productFlavors { }
